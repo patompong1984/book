@@ -248,7 +248,6 @@
                     <th>วิชาสามัญ</th>
                     <th>วิชาแผนก</th>
                     <th>วิชาฝึกงาน</th>
-                    <th>สามัญฝึกงาน</th>
                     <th>ลูกเสือ</th>
                     <th>ร่วมเลขา</th>
                     <th>ร่วมพื้นฐาน</th>
@@ -259,7 +258,6 @@
                     <th>รวมสามัญ</th>
                     <th>รวมแผนก</th>
                     <th>รวมฝึกงาน</th>
-                    <th>รวมสามัญฝึกงาน</th>
                     <th>รวมลูกเสือ</th>
                     <th>รวมเลขา</th>
                     <th>รวมพื้นฐาน</th>
@@ -273,11 +271,9 @@
             <tbody id="data-body"></tbody>
             <tfoot id="department-totals"></tfoot>
             <tr class="summary-row">
-                    <td colspan="14">รวมทั้งหมด</td>
-                    <td id="sum-samany" class="total-cell">0.00</td>
+                    <td colspan="13">รวมทั้งหมด</td> <td id="sum-samany" class="total-cell">0.00</td>
                     <td id="sum-major" class="total-cell">0.00</td>
                     <td id="sum-training" class="total-cell">0.00</td>
-                    <td id="sum-trainingsamany" class="total-cell">0.00</td>
                     <td id="sum-a" class="total-cell">0.00</td>
                     <td id="sum-b" class="total-cell">0.00</td>
                     <td id="sum-c" class="total-cell">0.00</td>
@@ -297,7 +293,6 @@
         <button onclick="clearData()" class="clear-btn">ล้างข้อมูลทั้งหมด</button>
     </div>
 
-    <!-- Modal สำหรับบันทึกข้อมูล -->
     <div id="saveModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('saveModal')">&times;</span>
@@ -311,7 +306,6 @@
         </div>
     </div>
 
-    <!-- Modal สำหรับโหลดข้อมูล -->
     <div id="loadModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('loadModal')">&times;</span>
@@ -329,8 +323,8 @@
     <script>
         const BASE_AMOUNT = 1000;
         const TRAINING_COST = 110;
-        const TRANING_SAMANY_COST = 189;
-        
+        // const TRANING_SAMANY_COST = 189; // Removed
+
         const departments = [
             'ก่อสร้าง','ช่างยนต์', 'ยานยนต์ไฟฟ้า', 'ช่างกลฯ', 'ช่างเชื่อม', 'ช่างไฟฟ้า',
             'อิเล็กฯ', 'เมคคาฯ', 'เทคนิคคอมฯ', 'บัญชี', 'การตลาด',
@@ -356,7 +350,7 @@
             subjectSamany: 0,
             subjectMajor: 0,
             subjectTraining: 0,
-            subjectTrainingsamany: 0,
+            // subjectTrainingsamany: 0, // Removed
             subjecta: 0,
             subjectb: 0,
             subjectc: 0,
@@ -406,13 +400,17 @@
                                     data.subjectd + data.subjecte + data.subjectf + data.subjectg;
                 
                 const costAfterTraining = BASE_AMOUNT - 
-                    (data.subjectTraining > 0 ? TRAINING_COST : 0) - 
-                    (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0);
+                    (data.subjectTraining > 0 ? TRAINING_COST : 0);
+                    // (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0); // Removed
                 
                 const perSubject = totalSubject > 0 ? costAfterTraining / totalSubject : 0;
                 
                 const samanyCost = perSubject * data.subjectSamany * data.student;
                 const majorCost = perSubject * data.subjectMajor * data.student;
+                
+                const trainingCost = (data.subjectTraining > 0 ? TRAINING_COST : 0) * data.student;
+                // const trainingsamanyCost = (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0) * data.student; // Removed
+                
                 const majora = perSubject * data.subjecta * data.student;
                 const majorb = perSubject * data.subjectb * data.student;
                 const majorc = perSubject * data.subjectc * data.student;
@@ -420,11 +418,8 @@
                 const majore = perSubject * data.subjecte * data.student;
                 const majorf = perSubject * data.subjectf * data.student;
                 const majorg = perSubject * data.subjectg * data.student;
-                
-                const trainingCost = (data.subjectTraining > 0 ? TRAINING_COST : 0) * data.student;
-                const trainingsamanyCost = (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0) * data.student;
-                
-                const totalCost = samanyCost + majorCost + trainingCost + trainingsamanyCost + 
+
+                const totalCost = samanyCost + majorCost + trainingCost + 
                                 majora + majorb + majorc + majord + majore + majorf + majorg;
                 
                 const tr = document.createElement("tr");
@@ -437,7 +432,6 @@
                     <td><input type="number" min="0" value="${data.subjectSamany}" onchange="updateData(${index}, 'subjectSamany', this.value)" /></td>
                     <td><input type="number" min="0" value="${data.subjectMajor}" onchange="updateData(${index}, 'subjectMajor', this.value)" /></td>
                     <td><input type="number" min="0" value="${data.subjectTraining}" onchange="updateData(${index}, 'subjectTraining', this.value)" /></td>
-                    <td><input type="number" min="0" value="${data.subjectTrainingsamany}" onchange="updateData(${index}, 'subjectTrainingsamany', this.value)" /></td>
                     <td><input type="number" min="0" value="${data.subjecta}" onchange="updateData(${index}, 'subjecta', this.value)" /></td>
                     <td><input type="number" min="0" value="${data.subjectb}" onchange="updateData(${index}, 'subjectb', this.value)" /></td>
                     <td><input type="number" min="0" value="${data.subjectc}" onchange="updateData(${index}, 'subjectc', this.value)" /></td>
@@ -448,7 +442,6 @@
                     <td class="result-cell">${samanyCost.toFixed(2)}</td>
                     <td class="result-cell">${majorCost.toFixed(2)}</td>
                     <td class="result-cell">${trainingCost.toFixed(2)}</td>
-                    <td class="result-cell">${trainingsamanyCost.toFixed(2)}</td>
                     <td class="result-cell">${majora.toFixed(2)}</td>
                     <td class="result-cell">${majorb.toFixed(2)}</td>
                     <td class="result-cell">${majorc.toFixed(2)}</td>
@@ -478,7 +471,7 @@
                         subjectSamany: 0, 
                         subjectMajor: 0, 
                         subjectTraining: 0,
-                        subjectTrainingsamany: 0,
+                        // subjectTrainingsamany: 0, // Removed
                         subjecta: 0,
                         subjectb: 0,
                         subjectc: 0,
@@ -502,15 +495,15 @@
                                     data.subjectd + data.subjecte + data.subjectf + data.subjectg;
                 
                 const costAfterTraining = BASE_AMOUNT - 
-                    (data.subjectTraining > 0 ? TRAINING_COST : 0) - 
-                    (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0);
+                    (data.subjectTraining > 0 ? TRAINING_COST : 0);
+                    // (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0); // Removed
                 
                 const perSubject = totalSubject > 0 ? costAfterTraining / totalSubject : 0;
                 
                 const samanyCost = perSubject * data.subjectSamany * data.student;
                 const majorCost = perSubject * data.subjectMajor * data.student;
                 const trainingCost = (data.subjectTraining > 0 ? TRAINING_COST : 0) * data.student;
-                const trainingsamanyCost = (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0) * data.student;
+                // const trainingsamanyCost = (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0) * data.student; // Removed
                 const aCost = perSubject * data.subjecta * data.student;
                 const bCost = perSubject * data.subjectb * data.student;
                 const cCost = perSubject * data.subjectc * data.student;
@@ -518,7 +511,7 @@
                 const eCost = perSubject * data.subjecte * data.student;
                 const fCost = perSubject * data.subjectf * data.student;
                 const gCost = perSubject * data.subjectg * data.student;
-                const totalCost = samanyCost + majorCost + trainingCost + trainingsamanyCost + 
+                const totalCost = samanyCost + majorCost + trainingCost + 
                                 aCost + bCost + cCost + dCost + eCost + fCost + gCost;
                 
                 if (!totals[row.department]) {
@@ -526,7 +519,7 @@
                         samany: 0, 
                         major: 0, 
                         training: 0, 
-                        trainingsamany: 0,
+                        // trainingsamany: 0, // Removed
                         a: 0, 
                         b: 0, 
                         c: 0, 
@@ -541,7 +534,7 @@
                 totals[row.department].samany += samanyCost;
                 totals[row.department].major += majorCost;
                 totals[row.department].training += trainingCost;
-                totals[row.department].trainingsamany += trainingsamanyCost;
+                // totals[row.department].trainingsamany += trainingsamanyCost; // Removed
                 totals[row.department].a += aCost;
                 totals[row.department].b += bCost;
                 totals[row.department].c += cCost;
@@ -561,11 +554,9 @@
                 tr.className = getDeptClass(dept);
                 
                 tr.innerHTML = `
-                    <td colspan="14">รวมแผนก ${dept}</td>
-                    <td class="total-cell">${row.samany.toFixed(2)}</td>
+                    <td colspan="13">รวมแผนก ${dept}</td> <td class="total-cell">${row.samany.toFixed(2)}</td>
                     <td class="total-cell">${row.major.toFixed(2)}</td>
                     <td class="total-cell">${row.training.toFixed(2)}</td>
-                    <td class="total-cell">${row.trainingsamany.toFixed(2)}</td>
                     <td class="total-cell">${row.a.toFixed(2)}</td>
                     <td class="total-cell">${row.b.toFixed(2)}</td>
                     <td class="total-cell">${row.c.toFixed(2)}</td>
@@ -584,7 +575,7 @@
                 samany: 0, 
                 major: 0, 
                 training: 0, 
-                trainingsamany: 0,
+                // trainingsamany: 0, // Removed
                 a: 0, 
                 b: 0, 
                 c: 0, 
@@ -600,7 +591,7 @@
                 sumAll.samany += row.samany;
                 sumAll.major += row.major;
                 sumAll.training += row.training;
-                sumAll.trainingsamany += row.trainingsamany;
+                // sumAll.trainingsamany += row.trainingsamany; // Removed
                 sumAll.a += row.a;
                 sumAll.b += row.b;
                 sumAll.c += row.c;
@@ -615,7 +606,7 @@
             document.getElementById("sum-samany").innerText = sumAll.samany.toFixed(2);
             document.getElementById("sum-major").innerText = sumAll.major.toFixed(2);
             document.getElementById("sum-training").innerText = sumAll.training.toFixed(2);
-            document.getElementById("sum-trainingsamany").innerText = sumAll.trainingsamany.toFixed(2);
+            // document.getElementById("sum-trainingsamany").innerText = sumAll.trainingsamany.toFixed(2); // Removed
             document.getElementById("sum-a").innerText = sumAll.a.toFixed(2);
             document.getElementById("sum-b").innerText = sumAll.b.toFixed(2);
             document.getElementById("sum-c").innerText = sumAll.c.toFixed(2);
@@ -724,7 +715,13 @@
                     
                     // คัดลอกข้อมูลเข้า array หลัก
                     for (let i = 0; i < Math.min(loadedData.data.length, dataArr.length); i++) {
-                        Object.assign(dataArr[i], loadedData.data[i]);
+                        // Ensure 'subjectTrainingsamany' is not copied if it exists in old data
+                        const { subjectTrainingsamany, ...rest } = loadedData.data[i];
+                        Object.assign(dataArr[i], rest);
+                        // Also explicitly set the removed field to 0 or undefined in current data structure
+                        if (dataArr[i].hasOwnProperty('subjectTrainingsamany')) {
+                            delete dataArr[i].subjectTrainingsamany;
+                        }
                     }
                     
                     renderTable();
