@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>ตารางคำนวณค่าหนังสือเรียน (เพิ่มแผนก)</title>
+    <style>
+        body {
+            font-family: "Tahoma", sans-serif;
+            margin: 20px;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .container {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        input[type=number] {
+            width: 60px;
+            text-align: center;
+            padding: 6px;
+            font-size: 13px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border 0.3s;
+        }
+        input[type=number]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            margin: 15px 10px;
+            padding: 10px 20px;
+            font-size: 15px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        tfoot td {
+            font-weight: bold;
+            background-color: #ecf0f1;
+        }
+        .summary-row {
+            background-color: #f8f9fa;
+        }
+        
+        /* สีแยกแผนก */
+        .dept-ก่อสร้าง { background-color: #fff2cc; }
+        .dept-ช่างยนต์ { background-color: #d9ead3; }
+        .dept-ยานยนต์ไฟฟ้า { background-color: #cfe2f3; }
+        .dept-ช่างกลฯ { background-color: #f4cccc; }
+        .dept-ช่างเชื่อม { background-color: #ead1dc; }
+        .dept-ช่างไฟฟ้า { background-color: #d0e0e3; }
+        .dept-อิเล็กฯ { background-color: #fce5cd; }
+        .dept-เมคคาฯ { background-color: #e6b8af; }
+        .dept-เทคนิคคอมฯ { background-color: #d9d2e9; }
+        .dept-บัญชี { background-color: #b6d7a8; }
+        .dept-การตลาด { background-color: #f9cb9c; }
+        .dept-การเลขาฯ { background-color: #c9daf8; }
+        .dept-คอมฯธุรกิจ { background-color: #ffe599; }
+        .dept-คอมฯMini { background-color: #b4a7d6; }
+        .dept-เทคโนโลยีสารสนเทศ { background-color: #a2c4c9; }
+        .dept-อัญมณี { background-color: #d0e0e3; }
+        
+        /* สีแยกคอลัมน์ผลลัพธ์ */
+        .result-cell {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .total-cell {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+        .grand-total {
+            background-color: #bbdefb;
+            font-weight: bold;
+        }
+        
+        /* ปุ่มล้างข้อมูล */
+        .clear-btn {
+            background-color: #e74c3c;
+        }
+        .clear-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        /* ปุ่ม Export */
+        .export-btn {
+            background-color: #2ecc71;
+        }
+        .export-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        /* ตัวกรอง */
+        .filter-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h2>ตารางคำนวณค่าหนังสือเรียน</h2>
+    
+    <div class="filter-container">
+        <div>
+            <label for="dept-filter">กรองแผนก:</label>
+            <select id="dept-filter" onchange="filterTable()">
+                <option value="">ทั้งหมด</option>
+                <option value="ก่อสร้าง">ก่อสร้าง</option>
+                <option value="ช่างยนต์">ช่างยนต์</option>
+                <option value="ยานยนต์ไฟฟ้า">ยานยนต์ไฟฟ้า</option>
+                <option value="ช่างกลฯ">ช่างกลฯ</option>
+                <option value="ช่างเชื่อม">ช่างเชื่อม</option>
+                <option value="ช่างไฟฟ้า">ช่างไฟฟ้า</option>
+                <option value="อิเล็กฯ">อิเล็กฯ</option>
+                <option value="เมคคาฯ">เมคคาฯ</option>
+                <option value="เทคนิคคอมฯ">เทคนิคคอมฯ</option>
+                <option value="บัญชี">บัญชี</option>
+                <option value="การตลาด">การตลาด</option>
+                <option value="การเลขาฯ">การเลขาฯ</option>
+                <option value="คอมฯธุรกิจ">คอมฯธุรกิจ</option>
+                <option value="คอมฯMini">คอมฯMini</option>
+                <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
+                <option value="อัญมณี">อัญมณี</option>
+            </select>
+        </div>
+        <div>
+            <label for="level-filter">กรองชั้น:</label>
+            <select id="level-filter" onchange="filterTable()">
+                <option value="">ทั้งหมด</option>
+                <option value="ปวช.1">ปวช.1</option>
+                <option value="ปวช.2">ปวช.2</option>
+                <option value="ปวช.3">ปวช.3</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>แผนก</th>
+                    <th>ชั้น</th>
+                    <th>จำนวนคน</th>
+                    <th>วิชาสามัญ</th>
+                    <th>วิชาแผนก</th>
+                    <th>วิชาฝึกงาน</th>
+                    <th>สามัญฝึกงาน</th>
+                    <th>ลูกเสือ</th>
+                    <th>ร่วมเลขา</th>
+                    <th>ร่วมพื้นฐาน</th>
+                    <th>ร่วมกล</th>
+                    <th>ร่วมไฟฟ้า</th>
+                    <th>ร่วมเชื่อม</th>
+                    <th>ร่วม EMC</th>
+                    <th>รวมสามัญ</th>
+                    <th>รวมแผนก</th>
+                    <th>รวมฝึกงาน</th>
+                    <th>รวมสามัญฝึกงาน</th>
+                    <th>รวมลูกเสือ</th>
+                    <th>รวมเลขา</th>
+                    <th>รวมพื้นฐาน</th>
+                    <th>รวมกล</th>
+                    <th>รวมไฟฟ้า</th>
+                    <th>รวมเชื่อม</th>
+                    <th>รวม EMC</th>
+                    <th>ยอดรวม</th>
+                </tr>
+            </thead>
+            <tbody id="data-body"></tbody>
+            <tfoot id="department-totals"></tfoot>
+            <tr class="summary-row">
+                    <td colspan="14">รวมทั้งหมด</td>
+                    <td id="sum-samany" class="total-cell">0.00</td>
+                    <td id="sum-major" class="total-cell">0.00</td>
+                    <td id="sum-training" class="total-cell">0.00</td>
+                    <td id="sum-trainingsamany" class="total-cell">0.00</td>
+                    <td id="sum-a" class="total-cell">0.00</td>
+                    <td id="sum-b" class="total-cell">0.00</td>
+                    <td id="sum-c" class="total-cell">0.00</td>
+                    <td id="sum-d" class="total-cell">0.00</td>
+                    <td id="sum-e" class="total-cell">0.00</td>
+                    <td id="sum-f" class="total-cell">0.00</td>
+                    <td id="sum-g" class="total-cell">0.00</td>
+                    <td id="sum-total" class="grand-total">0.00</td>
+                </tr>
+        </table>
+    </div>
+    
+    <div style="text-align:center">
+        <button onclick="exportExcel()" class="export-btn">Export Excel</button>
+        <button onclick="clearData()" class="clear-btn">ล้างข้อมูลทั้งหมด</button>
+    </div>
+
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script>
+        const BASE_AMOUNT = 1000;
+        const TRAINING_COST = 110;
+        const TRANING_SAMANY_COST = 189;
+        
+        const departments = [
+            'ก่อสร้าง','ช่างยนต์', 'ยานยนต์ไฟฟ้า', 'ช่างกลฯ', 'ช่างเชื่อม', 'ช่างไฟฟ้า',
+            'อิเล็กฯ', 'เมคคาฯ', 'เทคนิคคอมฯ', 'บัญชี', 'การตลาด',
+            'การเลขาฯ', 'คอมฯธุรกิจ', 'คอมฯMini', 'เทคโนโลยีสารสนเทศ', 'อัญมณี'
+        ];
+        
+        const levels = ['ปวช.1/1', 'ปวช.1/2', 'ปวช.1/3', 'ปวช.2/1', 'ปวช.2/2', 'ปวช.2/3', 'ปวช.3/1', 'ปวช.3/2', 'ปวช.3/3'];
+        
+        // สร้างแถวข้อมูลทั้งหมด
+        const rows = [];
+        departments.forEach(dept => {
+            levels.forEach(level => {
+                rows.push({ 
+                    department: dept, 
+                    level: level,
+                    visible: true
+                });
+            });
+        });
+        
+        const dataArr = rows.map(() => ({
+            student: 0,
+            subjectSamany: 0,
+            subjectMajor: 0,
+            subjectTraining: 0,
+            subjectTrainingsamany: 0,
+            subjecta: 0,
+            subjectb: 0,
+            subjectc: 0,
+            subjectd: 0,
+            subjecte: 0,
+            subjectf: 0,
+            subjectg: 0
+        }));
+        
+        window.onload = renderTable;
+        
+        function getDeptClass(department) {
+            return `dept-${department.replace(/[().\s]/g, '')}`;
+        }
+        
+        function filterTable() {
+            const deptFilter = document.getElementById("dept-filter").value;
+            const levelFilter = document.getElementById("level-filter").value;
+            
+            rows.forEach((row, index) => {
+                let visible = true;
+                
+                if (deptFilter && row.department !== deptFilter) {
+                    visible = false;
+                }
+                
+                if (levelFilter && !row.level.includes(levelFilter)) {
+                    visible = false;
+                }
+                
+                row.visible = visible;
+            });
+            
+            renderTable();
+        }
+        
+        function renderTable() {
+            const tbody = document.getElementById("data-body");
+            tbody.innerHTML = "";
+            
+            rows.forEach((row, index) => {
+                if (!row.visible) return;
+                
+                const data = dataArr[index];
+                const totalSubject = data.subjectSamany + data.subjectMajor + 
+                                    data.subjecta + data.subjectb + data.subjectc + 
+                                    data.subjectd + data.subjecte + data.subjectf + data.subjectg;
+                
+                const costAfterTraining = BASE_AMOUNT - 
+                    (data.subjectTraining > 0 ? TRAINING_COST : 0) - 
+                    (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0);
+                
+                const perSubject = totalSubject > 0 ? costAfterTraining / totalSubject : 0;
+                
+                const samanyCost = perSubject * data.subjectSamany * data.student;
+                const majorCost = perSubject * data.subjectMajor * data.student;
+                const majora = perSubject * data.subjecta * data.student;
+                const majorb = perSubject * data.subjectb * data.student;
+                const majorc = perSubject * data.subjectc * data.student;
+                const majord = perSubject * data.subjectd * data.student;
+                const majore = perSubject * data.subjecte * data.student;
+                const majorf = perSubject * data.subjectf * data.student;
+                const majorg = perSubject * data.subjectg * data.student;
+                
+                const trainingCost = (data.subjectTraining > 0 ? TRAINING_COST : 0) * data.student;
+                const trainingsamanyCost = (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0) * data.student;
+                
+                const totalCost = samanyCost + majorCost + trainingCost + trainingsamanyCost + 
+                                majora + majorb + majorc + majord + majore + majorf + majorg;
+                
+                const tr = document.createElement("tr");
+                tr.className = getDeptClass(row.department);
+                
+                tr.innerHTML = `
+                    <td>${row.department}</td>
+                    <td>${row.level}</td>
+                    <td><input type="number" min="0" value="${data.student}" onchange="updateData(${index}, 'student', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectSamany}" onchange="updateData(${index}, 'subjectSamany', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectMajor}" onchange="updateData(${index}, 'subjectMajor', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectTraining}" onchange="updateData(${index}, 'subjectTraining', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectTrainingsamany}" onchange="updateData(${index}, 'subjectTrainingsamany', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjecta}" onchange="updateData(${index}, 'subjecta', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectb}" onchange="updateData(${index}, 'subjectb', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectc}" onchange="updateData(${index}, 'subjectc', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectd}" onchange="updateData(${index}, 'subjectd', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjecte}" onchange="updateData(${index}, 'subjecte', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectf}" onchange="updateData(${index}, 'subjectf', this.value)" /></td>
+                    <td><input type="number" min="0" value="${data.subjectg}" onchange="updateData(${index}, 'subjectg', this.value)" /></td>
+                    <td class="result-cell">${samanyCost.toFixed(2)}</td>
+                    <td class="result-cell">${majorCost.toFixed(2)}</td>
+                    <td class="result-cell">${trainingCost.toFixed(2)}</td>
+                    <td class="result-cell">${trainingsamanyCost.toFixed(2)}</td>
+                    <td class="result-cell">${majora.toFixed(2)}</td>
+                    <td class="result-cell">${majorb.toFixed(2)}</td>
+                    <td class="result-cell">${majorc.toFixed(2)}</td>
+                    <td class="result-cell">${majord.toFixed(2)}</td>
+                    <td class="result-cell">${majore.toFixed(2)}</td>
+                    <td class="result-cell">${majorf.toFixed(2)}</td>
+                    <td class="result-cell">${majorg.toFixed(2)}</td>
+                    <td class="result-cell" style="font-weight:bold">${totalCost.toFixed(2)}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            renderTotals();
+        }
+        
+        function updateData(index, key, value) {
+            dataArr[index][key] = Math.max(0, Number(value)); // รับประกันว่าค่าจะไม่ต่ำกว่า 0
+            renderTable();
+        }
+        
+        function clearData() {
+            if (confirm("คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลทั้งหมด?")) {
+                for (let i = 0; i < dataArr.length; i++) {
+                    dataArr[i] = { 
+                        student: 0, 
+                        subjectSamany: 0, 
+                        subjectMajor: 0, 
+                        subjectTraining: 0,
+                        subjectTrainingsamany: 0,
+                        subjecta: 0,
+                        subjectb: 0,
+                        subjectc: 0,
+                        subjectd: 0,
+                        subjecte: 0,
+                        subjectf: 0,
+                        subjectg: 0
+                    };
+                }
+                renderTable();
+            }
+        }
+        
+        function renderTotals() {
+            const totals = {};
+            
+            rows.forEach((row, index) => {
+                const data = dataArr[index];
+                const totalSubject = data.subjectSamany + data.subjectMajor + 
+                                    data.subjecta + data.subjectb + data.subjectc + 
+                                    data.subjectd + data.subjecte + data.subjectf + data.subjectg;
+                
+                const costAfterTraining = BASE_AMOUNT - 
+                    (data.subjectTraining > 0 ? TRAINING_COST : 0) - 
+                    (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0);
+                
+                const perSubject = totalSubject > 0 ? costAfterTraining / totalSubject : 0;
+                
+                const samanyCost = perSubject * data.subjectSamany * data.student;
+                const majorCost = perSubject * data.subjectMajor * data.student;
+                const trainingCost = (data.subjectTraining > 0 ? TRAINING_COST : 0) * data.student;
+                const trainingsamanyCost = (data.subjectTrainingsamany > 0 ? TRANING_SAMANY_COST : 0) * data.student;
+                const aCost = perSubject * data.subjecta * data.student;
+                const bCost = perSubject * data.subjectb * data.student;
+                const cCost = perSubject * data.subjectc * data.student;
+                const dCost = perSubject * data.subjectd * data.student;
+                const eCost = perSubject * data.subjecte * data.student;
+                const fCost = perSubject * data.subjectf * data.student;
+                const gCost = perSubject * data.subjectg * data.student;
+                const totalCost = samanyCost + majorCost + trainingCost + trainingsamanyCost + 
+                                aCost + bCost + cCost + dCost + eCost + fCost + gCost;
+                
+                if (!totals[row.department]) {
+                    totals[row.department] = {
+                        samany: 0, 
+                        major: 0, 
+                        training: 0, 
+                        trainingsamany: 0,
+                        a: 0, 
+                        b: 0, 
+                        c: 0, 
+                        d: 0, 
+                        e: 0, 
+                        f: 0, 
+                        g: 0, 
+                        total: 0
+                    };
+                }
+                
+                totals[row.department].samany += samanyCost;
+                totals[row.department].major += majorCost;
+                totals[row.department].training += trainingCost;
+                totals[row.department].trainingsamany += trainingsamanyCost;
+                totals[row.department].a += aCost;
+                totals[row.department].b += bCost;
+                totals[row.department].c += cCost;
+                totals[row.department].d += dCost;
+                totals[row.department].e += eCost;
+                totals[row.department].f += fCost;
+                totals[row.department].g += gCost;
+                totals[row.department].total += totalCost;
+            });
+            
+            const tfoot = document.getElementById("department-totals");
+            tfoot.innerHTML = "";
+            
+            for (const dept in totals) {
+                const row = totals[dept];
+                const tr = document.createElement("tr");
+                tr.className = getDeptClass(dept);
+                
+                tr.innerHTML = `
+                    <td colspan="14">รวมแผนก ${dept}</td>
+                    <td class="total-cell">${row.samany.toFixed(2)}</td>
+                    <td class="total-cell">${row.major.toFixed(2)}</td>
+                    <td class="total-cell">${row.training.toFixed(2)}</td>
+                    <td class="total-cell">${row.trainingsamany.toFixed(2)}</td>
+                    <td class="total-cell">${row.a.toFixed(2)}</td>
+                    <td class="total-cell">${row.b.toFixed(2)}</td>
+                    <td class="total-cell">${row.c.toFixed(2)}</td>
+                    <td class="total-cell">${row.d.toFixed(2)}</td>
+                    <td class="total-cell">${row.e.toFixed(2)}</td>
+                    <td class="total-cell">${row.f.toFixed(2)}</td>
+                    <td class="total-cell">${row.g.toFixed(2)}</td>
+                    <td class="grand-total">${row.total.toFixed(2)}</td>
+                `;
+                
+                tfoot.appendChild(tr);
+            }
+            
+            // รวมทั้งหมดทุกแผนก
+            let sumAll = {
+                samany: 0, 
+                major: 0, 
+                training: 0, 
+                trainingsamany: 0,
+                a: 0, 
+                b: 0, 
+                c: 0, 
+                d: 0, 
+                e: 0, 
+                f: 0, 
+                g: 0, 
+                total: 0
+            };
+            
+            for (const dept in totals) {
+                const row = totals[dept];
+                sumAll.samany += row.samany;
+                sumAll.major += row.major;
+                sumAll.training += row.training;
+                sumAll.trainingsamany += row.trainingsamany;
+                sumAll.a += row.a;
+                sumAll.b += row.b;
+                sumAll.c += row.c;
+                sumAll.d += row.d;
+                sumAll.e += row.e;
+                sumAll.f += row.f;
+                sumAll.g += row.g;
+                sumAll.total += row.total;
+            }
+            
+            // ใส่ค่ารวมทั้งหมดลงใน footer
+            document.getElementById("sum-samany").innerText = sumAll.samany.toFixed(2);
+            document.getElementById("sum-major").innerText = sumAll.major.toFixed(2);
+            document.getElementById("sum-training").innerText = sumAll.training.toFixed(2);
+            document.getElementById("sum-trainingsamany").innerText = sumAll.trainingsamany.toFixed(2);
+            document.getElementById("sum-a").innerText = sumAll.a.toFixed(2);
+            document.getElementById("sum-b").innerText = sumAll.b.toFixed(2);
+            document.getElementById("sum-c").innerText = sumAll.c.toFixed(2);
+            document.getElementById("sum-d").innerText = sumAll.d.toFixed(2);
+            document.getElementById("sum-e").innerText = sumAll.e.toFixed(2);
+            document.getElementById("sum-f").innerText = sumAll.f.toFixed(2);
+            document.getElementById("sum-g").innerText = sumAll.g.toFixed(2);
+            document.getElementById("sum-total").innerText = sumAll.total.toFixed(2);
+        }
+        
+        function exportExcel() {
+            const table = document.querySelector("table");
+            const clonedTable = table.cloneNode(true);
+            
+            // ดึงค่าจาก <input> มาใส่แทนใน <td> ก่อน export
+            clonedTable.querySelectorAll("input").forEach(input => {
+                const td = input.parentElement;
+                td.textContent = input.value;
+            });
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(clonedTable);
+            XLSX.utils.book_append_sheet(wb, ws, "Book Costs");
+            
+            // สร้างวันที่สำหรับชื่อไฟล์
+            const today = new Date();
+            const dateStr = `${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}`;
+            
+            XLSX.writeFile(wb, `book_costs_${dateStr}.xlsx`);
+        }
+    </script>
+</body>
+</html>
