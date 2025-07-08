@@ -125,6 +125,20 @@
             background-color: #27ae60;
         }
         
+        /* ปุ่ม Save/Load */
+        .save-btn {
+            background-color: #9b59b6;
+        }
+        .save-btn:hover {
+            background-color: #8e44ad;
+        }
+        .load-btn {
+            background-color: #f39c12;
+        }
+        .load-btn:hover {
+            background-color: #e67e22;
+        }
+        
         /* ตัวกรอง */
         .filter-container {
             margin-bottom: 20px;
@@ -138,6 +152,52 @@
             border-radius: 4px;
             border: 1px solid #ddd;
             min-width: 150px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -232,7 +292,37 @@
     
     <div style="text-align:center">
         <button onclick="exportExcel()" class="export-btn">Export Excel</button>
+        <button onclick="showSaveModal()" class="save-btn">บันทึกข้อมูล</button>
+        <button onclick="showLoadModal()" class="load-btn">โหลดข้อมูล</button>
         <button onclick="clearData()" class="clear-btn">ล้างข้อมูลทั้งหมด</button>
+    </div>
+
+    <!-- Modal สำหรับบันทึกข้อมูล -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('saveModal')">&times;</span>
+            <h3>บันทึกข้อมูลปัจจุบัน</h3>
+            <p>กรุณาตั้งชื่อไฟล์สำหรับบันทึกข้อมูล:</p>
+            <input type="text" id="saveFileName" class="modal-input" placeholder="ชื่อไฟล์ (ไม่ต้องใส่ .json)" value="ข้อมูลหนังสือเรียน">
+            <div class="modal-buttons">
+                <button onclick="closeModal('saveModal')" class="clear-btn">ยกเลิก</button>
+                <button onclick="saveData()" class="save-btn">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal สำหรับโหลดข้อมูล -->
+    <div id="loadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loadModal')">&times;</span>
+            <h3>โหลดข้อมูลที่บันทึกไว้</h3>
+            <p>เลือกไฟล์ข้อมูลที่ต้องการโหลด:</p>
+            <input type="file" id="loadFileInput" class="modal-input" accept=".json">
+            <div class="modal-buttons">
+                <button onclick="closeModal('loadModal')" class="clear-btn">ยกเลิก</button>
+                <button onclick="loadData()" class="load-btn">โหลด</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -555,6 +645,101 @@
             const dateStr = `${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}`;
             
             XLSX.writeFile(wb, `book_costs_${dateStr}.xlsx`);
+        }
+        
+        // ฟังก์ชันสำหรับแสดง Modal บันทึกข้อมูล
+        function showSaveModal() {
+            document.getElementById('saveModal').style.display = 'block';
+        }
+        
+        // ฟังก์ชันสำหรับแสดง Modal โหลดข้อมูล
+        function showLoadModal() {
+            document.getElementById('loadModal').style.display = 'block';
+        }
+        
+        // ฟังก์ชันสำหรับปิด Modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // ฟังก์ชันบันทึกข้อมูล
+        function saveData() {
+            const fileName = document.getElementById('saveFileName').value || 'ข้อมูลหนังสือเรียน';
+            
+            // สร้างข้อมูลสำหรับบันทึก
+            const saveData = {
+                data: dataArr,
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            // แปลงเป็น JSON
+            const jsonData = JSON.stringify(saveData, null, 2);
+            
+            // สร้าง Blob และ URL
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            // สร้างลิงก์ดาวน์โหลด
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${fileName}.json`;
+            document.body.appendChild(a);
+            a.click();
+            
+            // ล้างทรัพยากร
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
+            
+            closeModal('saveModal');
+            alert(`บันทึกข้อมูลเป็นไฟล์ ${fileName}.json เรียบร้อยแล้ว`);
+        }
+        
+        // ฟังก์ชันโหลดข้อมูล
+        function loadData() {
+            const fileInput = document.getElementById('loadFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('กรุณาเลือกไฟล์ก่อน');
+                return;
+            }
+            
+            if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการโหลดข้อมูลนี้? ข้อมูลปัจจุบันจะถูกแทนที่')) {
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    
+                    // ตรวจสอบโครงสร้างข้อมูล
+                    if (!loadedData.data || !Array.isArray(loadedData.data)) {
+                        throw new Error('รูปแบบไฟล์ไม่ถูกต้อง');
+                    }
+                    
+                    // คัดลอกข้อมูลเข้า array หลัก
+                    for (let i = 0; i < Math.min(loadedData.data.length, dataArr.length); i++) {
+                        Object.assign(dataArr[i], loadedData.data[i]);
+                    }
+                    
+                    renderTable();
+                    closeModal('loadModal');
+                    alert('โหลดข้อมูลเรียบร้อยแล้ว');
+                } catch (error) {
+                    alert('เกิดข้อผิดพลาดในการโหลดไฟล์: ' + error.message);
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('เกิดข้อผิดพลาดในการอ่านไฟล์');
+            };
+            
+            reader.readAsText(file);
         }
     </script>
 </body>
